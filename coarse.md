@@ -87,7 +87,7 @@ boolean remove(Node node)
 
 ## `boolean contains(Node n)`: True if $n$ exists in the *`set`*, else false.
 
-```c
+```python
 boolean contains(Node node) 
 {
     Init:
