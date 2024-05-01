@@ -22,16 +22,22 @@ sig Node {
 one sig Head extends Node {}
 one sig Tail extends Node {}
 
+one sig Lock {
+    var owner: lone Thread
+}
+
 -- Each thread's ip can be at one of these points in the code at each timestep
 abstract sig Label {}
 -- Traversal is the first part of all three methods
-one sig Init, TraversalCheck, Traversal extends Label {}
+one sig Init, Locked, TraversalCheck, Traversal extends Label {}
 one sig AddCheck, Add1, Add2, AddFalse, AddTrue extends Label {}
 one sig RemoveCheck, Remove, RemoveFalse, RemoveTrue extends Label {}
 one sig Contains, ContainsFalse, ContainsTrue extends Label {}
 
 
 pred canProceed[t: Thread] {
+    -- You cannot proceed from Init until you can acquire the lock
+    (t.ip = Init) => no Lock.owner
     -- You cannot proceed from a return statement (there is no next step)
     t.ip not in {
         AddFalse + AddTrue + RemoveFalse + RemoveTrue
@@ -45,11 +51,25 @@ pred deltaInit[t: Thread] {
     t.ip = Init
     canProceed[t]
     -- Action
+    t.ip' = Locked
+    Lock.owner' = t
+    -- Frame
+    t.prev' = Head
+    t.curr' = Head.next
+    next' = next
+}
+
+pred deltaLocked[t: Thread] {
+    -- Guard
+    t.ip = Locked
+    canProceed[t]
+    -- Action
     t.ip' = TraversalCheck
     t.prev' = Head
     t.curr' = Head.next
     -- Frame
     next' = next
+    Lock.owner' = Lock.owner
 }
 
 pred deltaTraversalCheck[t: Thread] {
@@ -68,6 +88,7 @@ pred deltaTraversalCheck[t: Thread] {
     t.prev' = t.prev
     t.curr' = t.curr
     next' = next
+    Lock.owner' = Lock.owner
 }
 
 pred deltaTraversal[t: Thread] {
@@ -80,6 +101,7 @@ pred deltaTraversal[t: Thread] {
     t.curr' = t.curr.next
     -- Frame
     next' = next
+    Lock.owner' = Lock.owner
 }
 
 pred deltaAddCheck[t: Thread] {
@@ -89,8 +111,10 @@ pred deltaAddCheck[t: Thread] {
     -- Action
     (t.curr.key = t.node.key) implies {
         t.ip' = AddFalse
+        no Lock.owner'
     } else {
         t.ip' = Add1
+        Lock.owner' = Lock.owner
     }
     -- Frame
     t.prev' = t.prev
@@ -109,6 +133,7 @@ pred deltaAdd1[t: Thread] {
     -- Frame
     t.prev' = t.prev
     t.curr' = t.curr
+    Lock.owner' = Lock.owner
 }
 
 pred deltaAdd2[t: Thread] {
@@ -119,6 +144,7 @@ pred deltaAdd2[t: Thread] {
     t.ip' = AddTrue
     -- The only change to next is that t.prev now points to t.node
     (next' - next) = (t.prev -> t.node)
+    no Lock.owner'
     -- Frame
     t.prev' = t.prev
     t.curr' = t.curr
@@ -131,8 +157,10 @@ pred deltaRemoveCheck[t: Thread] {
     -- Action
     (t.curr.key = t.node.key) implies {
         t.ip' = Remove
+        Lock.owner' = Lock.owner
     } else {
         t.ip' = RemoveFalse
+        no Lock.owner'
     }
     -- Frame
     t.prev' = t.prev
@@ -148,6 +176,7 @@ pred deltaRemove[t: Thread] {
     t.ip' = RemoveTrue
     -- The only change to next is that t.prev now points to t.curr.next
     (next' - next) = (t.prev -> t.curr.next)
+    no Lock.owner'
     -- Frame
     t.prev' = t.prev
     t.curr' = t.curr
@@ -163,6 +192,7 @@ pred deltaContains[t: Thread] {
     } else {
         t.ip' = ContainsFalse
     }
+    no Lock.owner'
     -- Frame
     t.prev' = t.prev
     t.curr' = t.curr
@@ -190,12 +220,15 @@ pred init {
     Tail.next = Tail
     -- Tail is reachable from Head
     (Head -> Tail) in ^next
+    -- The lock starts unlocked
+    no Lock.owner
 }
 
 pred delta {
     (some t: Thread | canProceed[t]) implies {
         some t: Thread | {
-            deltaInit[t] or deltaTraversalCheck[t] or deltaTraversal[t]
+            deltaInit[t] or deltaLocked[t] or deltaTraversalCheck[t]
+            or deltaTraversal[t]
             or deltaAddCheck[t] or deltaAdd1[t] or deltaAdd2[t]
             or deltaRemoveCheck[t] or deltaRemove[t]
             or deltaContains[t]
@@ -204,6 +237,7 @@ pred delta {
     } else {
         all t: Thread | doNothing[t]
         next' = next
+        Lock.owner' = Lock.owner
     }
 }
 
