@@ -30,8 +30,24 @@ We look to verify that the synchronization algorithms implemented have a couple 
 
 ## Did your goals change at all from your proposal?
 
-## Did you realize anything you planned was unrealistic, or that anything you thought was unrealistic was doable?
+## Did you realize anything you planned was unrealistic, or that anything you thought was unrealistic was doable? 
+
+We were originally going to include the idea of individual core caches into our model. This would have captured some problems that can occur with cache coherence when running in a multi-core environment. However, we realized that this would be too complex to implement in the time frame we had.
 
 ## How should we understand an instance of your model and what your visualization shows (whether custom or default)?
 
-A trace is the sequential stepping of one or more threads through the algorithmic steps defined. When you run a trace between the Sequential-Model and the Coarse-Grained Locking Model, you will see a difference in the order of execution of these algorithmic steps. The Sequential-Model will show the interleaving of threads and the Coarse-Grained Locking Model will show the threads executing in a more orderly fashion.
+A trace is the sequential stepping of one or more threads through the algorithmic steps defined for each function (add, remove, contains). When you run a trace between the Sequential-Model and the Coarse-Grained Locking Model, you will see a difference in the order of execution of these algorithmic steps. The Sequential-Model will show the interleaving of threads and the Coarse-Grained Locking Model will show the threads executing in a more defined thread safe manner.
+
+## Stakeholders
+
+- People in Academia: Academics involved in concurrent programming who can use this model to explain certain algorithms to students and use it to show correctness.
+
+- CS1760 students who missed lecture and need to understand these algorithms.
+
+- Industry professionals that work with concurrent systems who might want to understand how certain algorithms behaviors change under different constraints, explore how they can adopt and apply these algorithms for other problems. This also applies to end users, who will use the products created by these professionals.
+
+- Computer engineers who think about which atomic instructions to include in computer hardware
+
+- Programming language developers who are trying to create a memory model for their language and decide on the extent of atomic support
+
+- Open source community members interested in concurrent programming who can provide feedback, and adopt the model for their own curiosity.
