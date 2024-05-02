@@ -17,7 +17,8 @@ sig Node {
     -- Represents the hash of the item in the node
     key: one Int,
     -- Shared variables, cached locally by each thread
-    var next: one Node
+    var next: one Node,
+    var owner: lone Thread
 }
 one sig Head extends Node {}
 one sig Tail extends Node {}
@@ -25,13 +26,18 @@ one sig Tail extends Node {}
 -- Each thread's ip can be at one of these points in the code at each timestep
 abstract sig Label {}
 -- Traversal is the first part of all three methods
-one sig Init, TraversalCheck, Traversal extends Label {}
+one sig Init, HeadLocked extends Label {}
+one sig TraversalCheck, Traversal1, Traversal2 extends Label {}
 one sig AddCheck, Add1, Add2, AddFalse, AddTrue extends Label {}
 one sig RemoveCheck, Remove, RemoveFalse, RemoveTrue extends Label {}
 one sig Contains, ContainsFalse, ContainsTrue extends Label {}
 
 
 pred canProceed[t: Thread] {
+    -- You cannot proceed until the node is available to lock
+    (t.ip = Init) => no Head.owner
+    (t.ip = HeadLocked) => no Head.next.owner
+    (t.ip = Traversal2) => no t.curr.next.owner
     -- You cannot proceed from a return statement (there is no next step)
     t.ip not in {
         AddFalse + AddTrue + RemoveFalse + RemoveTrue
@@ -45,10 +51,25 @@ pred deltaInit[t: Thread] {
     t.ip = Init
     canProceed[t]
     -- Action
-    t.ip' = TraversalCheck
+    t.ip' = HeadLocked
     t.prev' = Head
-    t.curr' = Head.next
+    -- The only change to owner is that the current thread now owns t.prev
+    owner' = owner + (Head -> t)
     -- Frame
+    t.curr' = t.curr
+    next' = next
+}
+
+pred deltaHeadLocked[t: Thread] {
+    -- Guard
+    t.ip = HeadLocked
+    -- Action
+    t.ip' = TraversalCheck
+    t.curr' = Head.next
+    -- The only change to owner is that the current thread now owns t.curr
+    owner' = owner + (Head.next -> t)
+    -- Frame
+    t.prev' = t.prev
     next' = next
 }
 
@@ -58,7 +79,7 @@ pred deltaTraversalCheck[t: Thread] {
     canProceed[t]
     -- Action
     (t.curr.key < t.node.key) implies {
-        t.ip' = Traversal
+        t.ip' = Traversal1
     } else {
         -- The thread can move to any of these labels depending on which
         -- method it's running
@@ -68,16 +89,33 @@ pred deltaTraversalCheck[t: Thread] {
     t.prev' = t.prev
     t.curr' = t.curr
     next' = next
+    owner' = owner
 }
 
-pred deltaTraversal[t: Thread] {
+pred deltaTraversal1[t: Thread] {
     -- Guard
-    t.ip = Traversal
+    t.ip = Traversal1
+    canProceed[t]
+    -- Action
+    t.ip' = Traversal2
+    -- The only change to owner is that t.prev is now unlocked
+    owner' = owner - (t.prev -> t)
+    -- Frame
+    t.prev' = t.prev
+    t.curr' = t.curr
+    next' = next
+}
+
+pred deltaTraversal2[t: Thread] {
+    -- Guard
+    t.ip = Traversal2
     canProceed[t]
     -- Action
     t.ip' = TraversalCheck
     t.prev' = t.curr
     t.curr' = t.curr.next
+    -- The only change to owner is that the current thread now owns t.curr
+    owner' = owner + (t.curr.next -> t)
     -- Frame
     next' = next
 }
@@ -89,8 +127,11 @@ pred deltaAddCheck[t: Thread] {
     -- Action
     (t.curr.key = t.node.key) implies {
         t.ip' = AddFalse
+        -- Unlock nodes that are still held
+        owner' = owner - (t.prev -> t) - (t.curr -> t)
     } else {
         t.ip' = Add1
+        owner' = owner
     }
     -- Frame
     t.prev' = t.prev
@@ -109,6 +150,7 @@ pred deltaAdd1[t: Thread] {
     -- Frame
     t.prev' = t.prev
     t.curr' = t.curr
+    owner' = owner
 }
 
 pred deltaAdd2[t: Thread] {
@@ -119,6 +161,8 @@ pred deltaAdd2[t: Thread] {
     t.ip' = AddTrue
     -- The only change to next is that t.prev now points to t.node
     (next' - next) = (t.prev -> t.node)
+    -- Unlock nodes that are still held
+    owner' = owner - (t.prev -> t) - (t.curr -> t)
     -- Frame
     t.prev' = t.prev
     t.curr' = t.curr
@@ -131,8 +175,11 @@ pred deltaRemoveCheck[t: Thread] {
     -- Action
     (t.curr.key = t.node.key) implies {
         t.ip' = Remove
+        owner' = owner
     } else {
         t.ip' = RemoveFalse
+        -- Unlock nodes that are still held
+        owner' = owner - (t.prev -> t) - (t.curr -> t)
     }
     -- Frame
     t.prev' = t.prev
@@ -148,6 +195,8 @@ pred deltaRemove[t: Thread] {
     t.ip' = RemoveTrue
     -- The only change to next is that t.prev now points to t.curr.next
     (next' - next) = (t.prev -> t.curr.next)
+    -- Unlock nodes that are still held
+    owner' = owner - (t.prev -> t) - (t.curr -> t)
     -- Frame
     t.prev' = t.prev
     t.curr' = t.curr
@@ -163,6 +212,8 @@ pred deltaContains[t: Thread] {
     } else {
         t.ip' = ContainsFalse
     }
+    -- Unlock nodes that are still held
+    owner' = owner - (t.prev -> t) - (t.curr -> t)
     -- Frame
     t.prev' = t.prev
     t.curr' = t.curr
@@ -192,12 +243,15 @@ pred init {
     Tail.next = Tail
     -- Tail is reachable from Head
     (Head -> Tail) in ^next
+    -- All nodes start unlocked
+    no Node.owner
 }
 
 pred delta {
     (some t: Thread | canProceed[t]) implies {
         some t: Thread | {
-            deltaInit[t] or deltaTraversalCheck[t] or deltaTraversal[t]
+            deltaInit[t] or deltaHeadLocked[t] or deltaTraversalCheck[t]
+            or deltaTraversal1[t] or deltaTraversal2[t]
             or deltaAddCheck[t] or deltaAdd1[t] or deltaAdd2[t]
             or deltaRemoveCheck[t] or deltaRemove[t]
             or deltaContains[t]
@@ -206,6 +260,7 @@ pred delta {
     } else {
         all t: Thread | doNothing[t]
         next' = next
+        owner' = owner
     }
 }
 

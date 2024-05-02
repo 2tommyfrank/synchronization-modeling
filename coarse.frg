@@ -1,6 +1,6 @@
 #lang forge/temporal
 
-option max_tracelength 12
+option max_tracelength 20
 
 sig Thread {
     -- Instruction pointer
@@ -214,6 +214,8 @@ pred init {
     -- Head key is minimum, tail key is maximum
     Head.key = min[Int]
     Tail.key = max[Int]
+    -- Cannot try to add/remove head or tail
+    all t: Thread | t.node not in { Head + Tail }
     -- Keys are in ascending order in the list
     all n: Head.(^next) | n.key <= n.next.key
     -- Tail's next field points to itself (so next can be a total function)
