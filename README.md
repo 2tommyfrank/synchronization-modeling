@@ -18,15 +18,23 @@ This data structure is being operated on by multiple threads concurrently. Synch
 
 We look to verify that the synchronization algorithms implemented have a couple properties:
 
-- **Starvation Free**: No thread is left waiting indefinitely.
-- **Deadlock Free**: Some thread will make progress.
-- **NEED TO ADD MORE PROPERTIES**
+### Properties Tests:
+**correctness**: The data structure behaves as expected in a multi-threaded environment.
+- nodes in the list are always in order by key
+- the tail is always reachable by the head
+- deadlock free, i.e eventually all threads will complete their operations and be at the end of the algorithm
+- 
+### Model Tests:
+
+- He owner of the lock should remian hte same thorughout the critical section
 
 ## What tradeoffs did you make in choosing your representation? What else did you try that didn’t work as well?
 
 ## What assumptions did you make about scope?
 
 ## What are the limits of your model?
+
+- We wanted to be able to verify/non-verify that the algorithms we run are starvation free. There current mplementation of our algorithm does not allow us to verify this property. We would need to allows threads that have completed their operations to be able to re-enter the algorithm. This would require a more complex model that we did not have time to implement.
 
 ## Did your goals change at all from your proposal?
 
