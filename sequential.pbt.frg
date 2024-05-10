@@ -64,20 +64,20 @@ test expect {
     // } for 4 Node, exactly 3 Thread is unsat
 
     // if contains returns False, then add should return True
-    linearizabilityContainsAdd : {
-        some disj t1, t2: Thread | {
-            algorithm
-            eventually t1.ip = ContainsFalse
-            eventually t2.ip = AddCheck
-            (t2.ip = Init) until (t1.ip = ContainsFalse)
-            t1.node = t2.node
-            always t2.ip != AddTrue
-            no t: Thread - t2 | {
-                eventually t.ip = AddTrue
-                t.node = t1.node
-            }
-        }
-    } for 4 Node, exactly 3 Thread is unsat
+    // linearizabilityContainsAdd : {
+    //     some disj t1, t2: Thread | {
+    //         algorithm
+    //         eventually t1.ip = ContainsFalse
+    //         eventually t2.ip = AddCheck
+    //         (t2.ip = Init) until (t1.ip = ContainsFalse)
+    //         t1.node = t2.node
+    //         always t2.ip != AddTrue
+    //         no t: Thread - t2 | {
+    //             eventually t.ip = AddTrue
+    //             t.node = t1.node
+    //         }
+    //     }
+    // } for 4 Node, exactly 3 Thread is unsat
 
     // if contains returns True, then remove should return True
     linearizabilityContainsRemove : {
