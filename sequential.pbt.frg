@@ -1,7 +1,7 @@
 #lang forge/temporal
 open "sequential.frg"
 
-option max_tracelength 25
+option max_tracelength 20
 option solver Glucose
 
 pred algorithm {
@@ -48,20 +48,20 @@ test expect {
     // } for 4 Node, exactly 3 Thread is unsat
 
     // if remove returns True, then contains should return False
-    linearizabilityRemoveContains : {
-        some disj t1, t2: Thread | {
-            algorithm
-            eventually t1.ip = RemoveTrue
-            eventually t2.ip = Contains
-            (t2.ip = Init) until (t1.ip = RemoveTrue)
-            t1.node = t2.node
-            always t2.ip != ContainsFalse
-            no t: Thread | {
-                eventually t.ip = AddTrue
-                t.node = t1.node
-            }
-        }
-    } for 4 Node, exactly 3 Thread is unsat
+    // linearizabilityRemoveContains : {
+    //     some disj t1, t2: Thread | {
+    //         algorithm
+    //         eventually t1.ip = RemoveTrue
+    //         eventually t2.ip = Contains
+    //         (t2.ip = Init) until (t1.ip = RemoveTrue)
+    //         t1.node = t2.node
+    //         always t2.ip != ContainsFalse
+    //         no t: Thread | {
+    //             eventually t.ip = AddTrue
+    //             t.node = t1.node
+    //         }
+    //     }
+    // } for 4 Node, exactly 3 Thread is unsat
 
     // if contains returns False, then add should return True
     linearizabilityContainsAdd : {

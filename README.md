@@ -6,15 +6,19 @@
 - gsingh32
 - jeblack
 
+## Demo - Video
+
+https://drive.google.com/file/d/1iv35pSwRaaoSf1YfOqMlVUkkMCDiVLEA/view?usp=sharing
+
 ## Project Overview
 
- This project explores different *`synchronization`* algorithms applied to a data structure (singly linked list) that provides a *`set`* like interface.
+This project explores different _`synchronization`_ algorithms applied to a data structure (singly linked list) that provides a _`set`_ like interface.
 
-- `add(Node n)`: Adds $n$ to the *`set`*.
-- `remove(Node n)`: Removes $n$ from the *`set`*.
-- `contains(Node n)`: True if $n$ exists in the *`set`*, else false.
+- `add(Node n)`: Adds $n$ to the _`set`_.
+- `remove(Node n)`: Removes $n$ from the _`set`_.
+- `contains(Node n)`: True if $n$ exists in the _`set`_, else false.
 
-This data structure is being operated on by multiple threads concurrently. Synchronization, means that the *`set`* and its operations behave as expected in a multi-threaded environment (**this could be better defined**). You can get a feel for the problems that arise when multiple threads access an un-synchronized data structure by running the [Sequential-Model](/sequential.frg) and inspecting the traces. Then run the [Coarse-Grained Locking Model](/coarse-grained-locking.frg) and see the difference in the traces.
+This data structure is being operated on by multiple threads concurrently. Synchronization, means that the _`set`_ and its operations behave as expected in a multi-threaded environment (**this could be better defined**). You can get a feel for the problems that arise when multiple threads access an un-synchronized data structure by running the [Sequential-Model](/sequential.frg) and inspecting the traces. Then run the [Coarse-Grained Locking Model](/coarse-grained-locking.frg) and see the difference in the traces.
 
 We look to verify that the synchronization algorithms implemented have a couple properties:
 
@@ -30,7 +34,7 @@ We look to verify that the synchronization algorithms implemented have a couple 
 
 ## Did your goals change at all from your proposal?
 
-## Did you realize anything you planned was unrealistic, or that anything you thought was unrealistic was doable? 
+## Did you realize anything you planned was unrealistic, or that anything you thought was unrealistic was doable?
 
 We were originally going to include the idea of individual core caches into our model. This would have captured some problems that can occur with cache coherence when running in a multi-core environment. However, we realized that this would be too complex to implement in the time frame we had.
 

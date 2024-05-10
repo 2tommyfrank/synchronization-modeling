@@ -1,6 +1,6 @@
 #lang forge/temporal
 
-option max_tracelength 20
+option max_tracelength 25
 
 sig Thread {
     -- Instruction pointer
@@ -265,9 +265,14 @@ pred delta {
 }
 
 run {
-    init
-    always delta
-    eventually { some t: Thread | t.ip = AddTrue }
+    init and always delta
+    some disj t1, t2: Thread | {
+        eventually {
+            t1.ip = Traversal2 and t2.ip = Traversal2
+        }
+        eventually {
+            t1.ip = AddTrue and t2.ip = ContainsTrue
+        }
+        t1.node = t2.node
+    }
 } for 8 Node, exactly 2 Thread
-
-run { init and always delta } for 8 Node, exactly 2 Thread
