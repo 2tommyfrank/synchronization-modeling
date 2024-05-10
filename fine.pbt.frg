@@ -1,5 +1,5 @@
 #lang forge/temporal
-open "coarse.frg"
+open "fine.frg"
 
 option max_tracelength 25
 option solver Glucose
@@ -96,6 +96,6 @@ test expect {
     } for 4 Node, exactly 3 Thread is unsat
 }
 
-// assert algorithm is sufficient for alwaysOrderedByKey for 4 Node, 2 Thread
-// assert algorithm is sufficient for alwayTailReachable for 4 Node, 2 Thread
-// assert algorithm is sufficient for eventuallyComplete for 4 Node, 2 Thread
+assert algorithm is sufficient for alwaysOrderedByKey for 4 Node, 2 Thread
+assert algorithm is sufficient for alwayTailReachable for 4 Node, 2 Thread
+assert algorithm is sufficient for eventuallyComplete for 4 Node, 2 Thread
