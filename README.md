@@ -6,49 +6,47 @@
 - gsingh32
 - jeblack
 
-## Demo - Video
+## Video Demo
 
 https://drive.google.com/file/d/1iv35pSwRaaoSf1YfOqMlVUkkMCDiVLEA/view?usp=sharing
 
 ## Project Overview
 
-This project explores different _`synchronization`_ algorithms applied to a data structure (singly linked list) that provides a _`set`_ like interface.
+This project uses Temporal Forge to explore different algorithms that synchronize a data structure to work with multiple threads. We specifically chose linked list-sets, i.e. an underlying linked list structure with a set interface:
 
-- `add(Node n)`: Adds $n$ to the _`set`_.
-- `remove(Node n)`: Removes $n$ from the _`set`_.
-- `contains(Node n)`: True if $n$ exists in the _`set`_, else false.
+- `bool add(Node n)`: Tries to add `n` to the set; returns success/failure.
+- `bool remove(Node n)`: Tries to remove `n` from the set; returns success/failure.
+- `bool contains(Node n)`: True if `n` is a member of the set, else false.
 
-This data structure is being operated on by multiple threads concurrently. Synchronization, means that the _`set`_ and its operations behave as expected in a multi-threaded environment (**this could be better defined**). You can get a feel for the problems that arise when multiple threads access an un-synchronized data structure by running the [Sequential-Model](/sequential.frg) and inspecting the traces. Then run the [Coarse-Grained Locking Model](/coarse-grained-locking.frg) and see the difference in the traces.
+The algorithms come from _The Art of Multiprocessor Synchronization_, the textbook for cs1760. By synchronization, we mean that the set operations can be _linearized_ for any multi-threaded execuation. That means that each method call appears to "take effect" at a particular moment in time, visible to all threads simultaneously. For example, if thread A adds a node and thread B checks that node exists, any other threads should also find the node exists if they check later.
 
-We look to verify that the synchronization algorithms implemented have a couple properties:
+You can get a feel for the problems that arise when multiple threads access an un-synchronized data structure by running the [Unsynchronized Model](/unsynchronized.frg) and inspecting the traces. Then run the [Coarse-Grained Locking Model](/coarse-grained-locking.frg) and [Fine-Grained Locking Model](/fine-grained-locking.frg) to see the difference in the traces.
 
-### Properties Tests:
-**correctness**: The data structure behaves as expected in a multi-threaded environment.
+## Model and Visualization Details
+
+Each trace represents one or more threads stepping through a single method of the algorithm (either `add`, `remove`, or `contains`). When a thread completes the method, it does nothing. When you run a trace of each algorithm, you will see a difference in the order of execution of these algorithmic steps. The Unsynchronized Model will show free interleaving of threads, and the Fine-Grained Locking Model will show more limited interleaving, while the Coarse-Grained Locking Model will show no interleaving.
+
+Each thread is represented as a `sig`, containing its instruction pointer `ip`, local variables, and method arguments. The method run by a thread and the return value are represented by the final state of the instruction pointer: `AddFalse`, `RemoveTrue`, etc. List nodes are also represented as a `sig`, with a single variable field representing the links between nodes.
+
+We did not create a custom visualization; Table View is the easiest to look at. Pay attention to the `ip` field updating between timesteps, as well as associated changes in the `next` field of list nodes.
+
+## Property Tests
+
+We aimed to verify that the synchronization algorithms have a couple properties:
+
+**Correctness:** The data structure behaves as expected in a multi-threaded environment. This means checking that the data structure remains in a valid state:
+
 - nodes in the list are always in order by key
 - the tail is always reachable by the head
 - deadlock free, i.e eventually all threads will complete their operations and be at the end of the algorithm
-- 
-### Model Tests:
 
-- He owner of the lock should remian hte same thorughout the critical section
+...and also that the data structure is linearizable. We tested linearizability with a few specific scenarios which are not exhaustive. All the tests succeed for the coarse-grained and fine-grained locking algorithms, which are supposed to be correct, but some of them fail for the unsynchronized algorithm, as expected.
 
-## What tradeoffs did you make in choosing your representation? What else did you try that didn’t work as well?
+**Starvation:** We wanted to test that neither of the algorithms involving locks were starvation-free; a thread can repeatedly be overtaken by other threads in acquiring locks. Our model, which only allowed each thread to complete one method per trace, was unable to represent this situation. The model could be extended to represent starvation by allowing threads to restart methods, although this complicates testing logic and requires long trace lengths.
 
-## What assumptions did you make about scope?
+## Model Limitations
 
-## What are the limits of your model?
-
-- We wanted to be able to verify/non-verify that the algorithms we run are starvation free. There current mplementation of our algorithm does not allow us to verify this property. We would need to allows threads that have completed their operations to be able to re-enter the algorithm. This would require a more complex model that we did not have time to implement.
-
-## Did your goals change at all from your proposal?
-
-## Did you realize anything you planned was unrealistic, or that anything you thought was unrealistic was doable?
-
-We were originally going to include the idea of individual core caches into our model. This would have captured some problems that can occur with cache coherence when running in a multi-core environment. However, we realized that this would be too complex to implement in the time frame we had.
-
-## How should we understand an instance of your model and what your visualization shows (whether custom or default)?
-
-A trace is the sequential stepping of one or more threads through the algorithmic steps defined for each function (add, remove, contains). When you run a trace between the Sequential-Model and the Coarse-Grained Locking Model, you will see a difference in the order of execution of these algorithmic steps. The Sequential-Model will show the interleaving of threads and the Coarse-Grained Locking Model will show the threads executing in a more defined thread safe manner.
+We were originally going to include caching in our model. Each thread would have a local cache of the shared heap (in this case, the list nodes' `next` pointers), and reads and writes would not immediately show up on other caches. This design would have captured more of the problems that can occur with multi-processor execution, such as data structure invariants breaking in the unsychronized model. However, we realized this would be too complex to implement in the time frame we had.
 
 ## Stakeholders
 

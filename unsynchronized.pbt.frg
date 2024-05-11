@@ -1,5 +1,5 @@
 #lang forge/temporal
-open "sequential.frg"
+open "unsynchronized.frg"
 
 option max_tracelength 20
 option solver Glucose
@@ -14,24 +14,24 @@ pred alwaysOrderedByKey {
     }
 }
 -- Tail is always reachable by Head
-pred alwayTailReachable{
+pred alwayTailReachable {
     always {
         (Head -> Tail) in ^next
         Tail.next = Tail
     }
 }
 
-pred eventuallyComplete{
+pred eventuallyComplete {
     eventually {
-        Thread.ip  in {
-        AddFalse + AddTrue + RemoveFalse + RemoveTrue
-        + ContainsFalse + ContainsTrue
-    }
+        Thread.ip in {
+            AddFalse + AddTrue + RemoveFalse + RemoveTrue
+            + ContainsFalse + ContainsTrue
+        }
     }
 }
 
 test expect {
-    // if add returns True, then contains should return True
+    // if add returns True, then contains should return True - FAILURE
     // linearizabilityAddContains : {
     //     some disj t1, t2: Thread | {
     //         algorithm
@@ -47,7 +47,7 @@ test expect {
     //     }
     // } for 4 Node, exactly 3 Thread is unsat
 
-    // if remove returns True, then contains should return False
+    // if remove returns True, then contains should return False - FAILURE
     // linearizabilityRemoveContains : {
     //     some disj t1, t2: Thread | {
     //         algorithm
@@ -64,20 +64,20 @@ test expect {
     // } for 4 Node, exactly 3 Thread is unsat
 
     // if contains returns False, then add should return True
-    // linearizabilityContainsAdd : {
-    //     some disj t1, t2: Thread | {
-    //         algorithm
-    //         eventually t1.ip = ContainsFalse
-    //         eventually t2.ip = AddCheck
-    //         (t2.ip = Init) until (t1.ip = ContainsFalse)
-    //         t1.node = t2.node
-    //         always t2.ip != AddTrue
-    //         no t: Thread - t2 | {
-    //             eventually t.ip = AddTrue
-    //             t.node = t1.node
-    //         }
-    //     }
-    // } for 4 Node, exactly 3 Thread is unsat
+    linearizabilityContainsAdd : {
+        some disj t1, t2: Thread | {
+            algorithm
+            eventually t1.ip = ContainsFalse
+            eventually t2.ip = AddCheck
+            (t2.ip = Init) until (t1.ip = ContainsFalse)
+            t1.node = t2.node
+            always t2.ip != AddTrue
+            no t: Thread - t2 | {
+                eventually t.ip = AddTrue
+                t.node = t1.node
+            }
+        }
+    } for 4 Node, exactly 3 Thread is unsat
 
     // if contains returns True, then remove should return True
     linearizabilityContainsRemove : {
@@ -96,6 +96,6 @@ test expect {
     } for 4 Node, exactly 3 Thread is unsat
 }
 
-// assert algorithm is sufficient for alwaysOrderedByKey for 4 Node, 2 Thread
-// assert algorithm is sufficient for alwayTailReachable for 4 Node, 2 Thread
-// assert algorithm is sufficient for eventuallyComplete for 4 Node, 2 Thread
+assert algorithm is sufficient for alwaysOrderedByKey for 4 Node, 2 Thread
+assert algorithm is sufficient for alwayTailReachable for 4 Node, 2 Thread
+assert algorithm is sufficient for eventuallyComplete for 4 Node, 2 Thread

@@ -14,19 +14,19 @@ pred alwaysOrderedByKey {
     }
 }
 -- Tail is always reachable by Head
-pred alwayTailReachable{
+pred alwayTailReachable {
     always {
         (Head -> Tail) in ^next
         Tail.next = Tail
     }
 }
 
-pred eventuallyComplete{
+pred eventuallyComplete {
     eventually {
-        Thread.ip  in {
-        AddFalse + AddTrue + RemoveFalse + RemoveTrue
-        + ContainsFalse + ContainsTrue
-    }
+        Thread.ip in {
+            AddFalse + AddTrue + RemoveFalse + RemoveTrue
+            + ContainsFalse + ContainsTrue
+        }
     }
 }
 
@@ -96,6 +96,6 @@ test expect {
     } for 4 Node, exactly 3 Thread is unsat
 }
 
-// assert algorithm is sufficient for alwaysOrderedByKey for 4 Node, 2 Thread
-// assert algorithm is sufficient for alwayTailReachable for 4 Node, 2 Thread
-// assert algorithm is sufficient for eventuallyComplete for 4 Node, 2 Thread
+assert algorithm is sufficient for alwaysOrderedByKey for 4 Node, 2 Thread
+assert algorithm is sufficient for alwayTailReachable for 4 Node, 2 Thread
+assert algorithm is sufficient for eventuallyComplete for 4 Node, 2 Thread

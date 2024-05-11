@@ -276,3 +276,5 @@ run {
         t1.node = t2.node
     }
 } for 8 Node, exactly 2 Thread
+
+run { init and always delta } for 8 Node, exactly 2 Thread

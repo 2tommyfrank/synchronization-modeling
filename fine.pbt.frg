@@ -14,19 +14,19 @@ pred alwaysOrderedByKey {
     }
 }
 -- Tail is always reachable by Head
-pred alwayTailReachable{
+pred alwayTailReachable {
     always {
         (Head -> Tail) in ^next
         Tail.next = Tail
     }
 }
 
-pred eventuallyComplete{
+pred eventuallyComplete {
     eventually {
-        Thread.ip  in {
-        AddFalse + AddTrue + RemoveFalse + RemoveTrue
-        + ContainsFalse + ContainsTrue
-    }
+        Thread.ip in {
+            AddFalse + AddTrue + RemoveFalse + RemoveTrue
+            + ContainsFalse + ContainsTrue
+        }
     }
 }
 
